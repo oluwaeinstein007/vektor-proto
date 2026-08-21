@@ -1,0 +1,20 @@
+[project]
+name = "vektor-proto"
+version = "0.1.0"
+description = "Generated Python gRPC stubs for the VEKTOR TS<->Python boundary (llm.proto). Consumed only by vektor-ml."
+requires-python = ">=3.11"
+dependencies = [
+    "grpcio>=1.83.0", # generated code asserts this floor at import time (GRPC_GENERATED_VERSION) — keep in lockstep with dev's grpcio-tools pin
+    "protobuf>=7.35.1", # matches the gencode version grpcio-tools' bundled protoc currently emits — see README
+]
+
+[project.optional-dependencies]
+dev = ["grpcio-tools>=1.83.0", "protoletariat>=3.3.0"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["vektor_proto*"]

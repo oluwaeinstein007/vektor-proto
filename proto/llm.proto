@@ -1,0 +1,25 @@
+// vektor-proto/proto/llm.proto
+//
+// The ONLY protocol that crosses the TypeScript <-> Python boundary
+// (VEKTOR-PRD.md §9.3, §9.4). coa-svc (vektor-platform) calls this;
+// llm-cloud-svc (vektor-ml) implements it. Neither side vendors this file —
+// both consume generated stubs published from this repo.
+syntax = "proto3";
+
+package vektor.llm.v1;
+
+service LLMService {
+  rpc GenerateCOA(COARequest) returns (COAResponse);
+}
+
+message COARequest {
+  string situation_json = 1;   // Serialized situation context (Zod-validated before send)
+  string doctrine_context = 2; // RAG-retrieved doctrine chunks from Qdrant
+  int32 num_options = 3;       // Always 3 per REQ-4.2
+}
+
+message COAResponse {
+  string coa_json = 1;         // Structured JSON; validated against the COA Zod schema by the TS caller
+  float confidence = 2;
+  int32 latency_ms = 3;
+}

@@ -1,0 +1,9 @@
+node_modules/
+dist/
+src/generated/
+python/vektor_proto/*_pb2.py
+python/vektor_proto/*_pb2_grpc.py
+python/**/__pycache__/
+python/*.egg-info/
+*.tsbuildinfo
+.DS_Store
