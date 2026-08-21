@@ -4,6 +4,7 @@
 
 export * from "./schemas/entity.js";
 export * from "./schemas/detection-event.js";
+export * from "./schemas/video-frame.js";
 export * from "./schemas/coa.js";
 export * from "./schemas/alert.js";
 export * from "./schemas/audit.js";
