@@ -11,3 +11,5 @@ export * from "./schemas/coa.js";
 export * from "./schemas/alert.js";
 export * from "./schemas/audit.js";
 export * from "./schemas/socket-events.js";
+export * from "./schemas/ew-rf-emission.js";
+export * from "./schemas/blue-force.js";
