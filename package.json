@@ -11,6 +11,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./llm": {
+      "types": "./dist/llm.d.ts",
+      "import": "./dist/llm.js"
     }
   },
   "files": ["dist", "proto"],
@@ -25,10 +29,10 @@
   },
   "dependencies": {
     "@bufbuild/protobuf": "^2.10.2",
+    "@grpc/grpc-js": "^1.12.2",
     "zod": "^3.24.1"
   },
   "devDependencies": {
-    "@grpc/grpc-js": "^1.12.2",
     "grpc-tools": "^1.12.4",
     "ts-proto": "^2.3.0",
     "typescript": "^5.7.2"

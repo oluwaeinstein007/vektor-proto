@@ -3,7 +3,7 @@ import { z } from "zod";
 export const AlertSeverity = z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]);
 export type AlertSeverity = z.infer<typeof AlertSeverity>;
 
-export const AlertType = z.enum(["GEOFENCE", "ANOMALY", "ESCALATION", "SENSOR_HEALTH"]);
+export const AlertType = z.enum(["GEOFENCE", "ANOMALY", "ESCALATION", "SENSOR_HEALTH", "LOW_STOCK"]);
 export type AlertType = z.infer<typeof AlertType>;
 
 export const Alert = z.object({

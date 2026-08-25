@@ -13,3 +13,12 @@ export * from "./schemas/audit.js";
 export * from "./schemas/socket-events.js";
 export * from "./schemas/ew-rf-emission.js";
 export * from "./schemas/blue-force.js";
+export * from "./schemas/target-workbench.js";
+export * from "./schemas/geofence.js";
+export * from "./schemas/logistics.js";
+export * from "./schemas/reporting.js";
+
+// gRPC stubs (LLMServiceClient etc.) are NOT re-exported here — they pull in
+// @grpc/grpc-js, which requires Node built-ins (fs) unavailable in a browser
+// bundle. This barrel must stay safe for apps/web's client-side code to
+// import. Node-only consumers (coa-svc) import from "@vektor/proto/llm".
