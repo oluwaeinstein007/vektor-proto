@@ -13,7 +13,7 @@ See VEKTOR-PRD.md §9.4 and Pitfall 3 (§17). Short version: when contracts live
 
 `vektor-platform` and `vektor-ml` are separate repos and, until this package is published to a real npm/PyPI registry, consume it directly from the filesystem:
 
-- TS side: `vektor-platform/packages/shared/package.json` depends on `"@vektor/proto": "link:../../../vektor-proto"` — build this repo (`pnpm build`) before installing in `vektor-platform`.
+- TS side: `vektor-backend/packages/shared/package.json` depends on `"@vektor/proto": "link:../../../vektor-proto"` — build this repo (`pnpm build`) before installing in `vektor-backend`.
 - Python side: `vektor-ml` installs this with `pip install -e ../vektor-proto/python` after running `pnpm codegen:py` here.
 
 In production, both consume versioned, published packages instead (§9.8 CI/CD topology) — the filesystem link is a local-dev-only shim.
@@ -27,7 +27,9 @@ pnpm build        # tsc -> dist/
 pnpm lint         # typecheck only
 ```
 
-`codegen:py` requires the `python-grpc-tools-protoc` and `protol` executables on `PATH` (installed by `pip install grpcio-tools protoletariat` — see `python/pyproject.toml`'s `dev` extra). The `protol` step exists because `grpc_tools.protoc`'s gRPC plugin emits a plain `import llm_pb2`, which only resolves when the generated file is imported from the top level of `sys.path` — inside a package (`vektor_proto.llm_pb2_grpc`) that import breaks. `protol` rewrites it to the package-relative `from . import llm_pb2`. This is a long-standing upstream grpc_tools limitation (grpc/grpc#9575), not something specific to this repo — every consumer of grpc_tools that nests generated code in a package hits it.
+`codegen:ts` requires a real `protoc` binary on `PATH` (not installed by any npm package here — e.g. `apt-get install protobuf-compiler`, or fetch a release from https://github.com/protocolbuffers/protobuf/releases). `codegen:py` requires that same `protoc` binary (used by `protol`'s `--protoc-path`, default `protoc`) plus the `protol` executable (installed by `pip install grpcio-tools protoletariat` — see `python/pyproject.toml`'s `dev` extra).
+
+**Install the `dev` extra (codegen tooling) and the package itself in two separate venvs, never `pip install -e python[dev]` in one.** protoletariat hard-caps `protobuf<6`; this package's own runtime `dependencies` require `protobuf>=7.35.1` — those can never both be satisfied in one resolved environment, so a combined install always fails with `ResolutionImpossible`. Generate the stubs in a throwaway venv with `grpcio-tools`/`protoletariat` installed (they only ever produce files on disk), then `pip install -e python` (no extra) in a different environment to actually use/verify the package. `.github/workflows/ci.yml` does exactly this. The `protol` step exists because `grpc_tools.protoc`'s gRPC plugin emits a plain `import llm_pb2`, which only resolves when the generated file is imported from the top level of `sys.path` — inside a package (`vektor_proto.llm_pb2_grpc`) that import breaks. `protol` rewrites it to the package-relative `from . import llm_pb2`. This is a long-standing upstream grpc_tools limitation (grpc/grpc#9575), not something specific to this repo — every consumer of grpc_tools that nests generated code in a package hits it.
 
 **Version coupling to watch:** the generated `*_pb2_grpc.py` embeds a `GRPC_GENERATED_VERSION` check and raises `RuntimeError` at import time if the installed `grpcio` runtime is older than whatever `grpcio-tools` version produced it. `python/pyproject.toml`'s `grpcio` floor must stay >= the `grpcio-tools` version used for the last `codegen:py` run — bumping `grpcio-tools` in `dev` without bumping the `grpcio` runtime floor to match will break every consumer's import, not just this repo's build.
 

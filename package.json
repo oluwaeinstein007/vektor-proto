@@ -21,8 +21,8 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "dev": "tsc -p tsconfig.json --watch",
-    "codegen:ts": "protoc --plugin=protoc-gen-ts_proto=../node_modules/.bin/protoc-gen-ts_proto --ts_proto_out=src/generated --ts_proto_opt=outputServices=grpc-js,esModuleInterop=true -I proto proto/*.proto",
-    "codegen:py": "python3 -m grpc_tools.protoc -I proto --python_out=python/vektor_proto --grpc_python_out=python/vektor_proto proto/*.proto && protol --in-place --python-out python/vektor_proto protoc --protoc-path=python-grpc-tools-protoc --proto-path=proto proto/llm.proto",
+    "codegen:ts": "mkdir -p src/generated && protoc --plugin=protoc-gen-ts_proto=./node_modules/.bin/protoc-gen-ts_proto --ts_proto_out=src/generated --ts_proto_opt=outputServices=grpc-js,esModuleInterop=true -I proto proto/*.proto",
+    "codegen:py": "python3 -m grpc_tools.protoc -I proto --python_out=python/vektor_proto --grpc_python_out=python/vektor_proto proto/*.proto && protol --in-place --python-out python/vektor_proto protoc --protoc-path=protoc --proto-path=proto proto/llm.proto",
     "codegen": "pnpm run codegen:ts && pnpm run codegen:py",
     "lint": "tsc -p tsconfig.json --noEmit",
     "clean": "rm -rf dist src/generated"

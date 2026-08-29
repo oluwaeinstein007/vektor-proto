@@ -1,0 +1,82 @@
+# INFRA-008: this repo previously had no CI at all — a real gap, since
+# every other repo's own CI (vektor-backend, vektor-web, vektor-ml) checks
+# this repo out as a sibling and rebuilds it from source (dist/ and
+# src/generated/ are both gitignored, see .gitignore — nothing here is
+# usable without running codegen+build first). This workflow verifies that
+# path actually works, plus catches the two failure modes specific to a
+# schema/codegen source-of-truth repo: hand-edited generated code, and a
+# stale grpcio/grpcio-tools version pin (see README.md's "version coupling"
+# note).
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+jobs:
+  ts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: pnpm/action-setup@v4
+
+      # ts_proto's plugin needs a real `protoc` binary on PATH — not bundled
+      # with any npm package here, and ubuntu-latest has no apt package for
+      # a specific pinned version, so this just takes whatever apt has.
+      - name: Install protoc
+        run: sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends protobuf-compiler
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Generate TS stubs from proto/*.proto
+        run: pnpm codegen:ts
+
+      - name: Typecheck (includes the freshly generated code)
+        run: pnpm lint
+
+      - run: pnpm build
+
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # protol's own `protoc` subcommand shells out to a real `protoc`
+      # binary (`--protoc-path`, default plain `protoc`) to regenerate a
+      # FileDescriptorSet — grpcio-tools' bundled `grpc_tools.protoc` is a
+      # separate thing and does not provide this.
+      - name: Install protoc
+        run: sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends protobuf-compiler
+
+      # Codegen tooling and the package itself MUST live in separate venvs:
+      # protoletariat hard-caps protobuf<6, while vektor-proto's own runtime
+      # dependencies require protobuf>=7.35.1 — those can never both be
+      # satisfied in one resolved environment (`pip install -e python[dev]`
+      # fails with ResolutionImpossible every time; verified directly
+      # against the real PyPI metadata, not assumed). protoletariat/
+      # grpcio-tools only ever produce files on disk, so there's no reason
+      # they need to coexist with the runtime package.
+      - name: Create codegen venv
+        run: python3 -m venv .venv-codegen && .venv-codegen/bin/pip install grpcio-tools protoletariat
+
+      - name: Generate Python gRPC stubs
+        run: .venv-codegen/bin/python3 -m grpc_tools.protoc -I proto --python_out=python/vektor_proto --grpc_python_out=python/vektor_proto proto/*.proto
+
+      - name: Fix up the generated import (grpc/grpc#9575, see README.md)
+        run: .venv-codegen/bin/protol --in-place --python-out python/vektor_proto protoc --protoc-path=protoc --proto-path=proto proto/llm.proto
+
+      - name: Create runtime venv and install the package (verifies python/pyproject.toml packaging + the grpcio version floor actually lines up)
+        run: python3 -m venv .venv-runtime && .venv-runtime/bin/pip install -e python
+
+      - name: Import sanity check
+        run: .venv-runtime/bin/python3 -c "from vektor_proto import llm_pb2, llm_pb2_grpc; print('llm_pb2 OK:', llm_pb2.DESCRIPTOR.name)"

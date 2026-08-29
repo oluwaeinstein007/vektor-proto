@@ -9,6 +9,17 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+# NEVER `pip install -e .[dev]` — protoletariat (even at its latest release,
+# 3.3.10) hard-caps `protobuf<6`, which can never coexist in one resolved
+# environment with this package's own unconditional `protobuf>=7.35.1`
+# floor above; pip's resolver fails with ResolutionImpossible every time.
+# These are codegen-time tools that only ever touch files on disk (the
+# generated *_pb2*.py) — they never need to be importable alongside the
+# actual `vektor_proto` runtime package. Install them into a separate,
+# throwaway venv to run codegen, then `pip install -e .` (no extra) in a
+# different venv/environment to actually use or verify the package. See
+# README.md's "Commands" section and .github/workflows/ci.yml for the
+# working two-venv pattern.
 dev = ["grpcio-tools>=1.83.0", "protoletariat>=3.3.0"]
 
 [build-system]
