@@ -6,6 +6,7 @@ export * from "./schemas/entity.js";
 export * from "./schemas/detection-event.js";
 export * from "./schemas/video-frame.js";
 export * from "./schemas/sensor-feeds.js";
+export * from "./schemas/field-telemetry-payload.js";
 export * from "./schemas/imagery-ingest.js";
 export * from "./schemas/coa.js";
 export * from "./schemas/alert.js";
