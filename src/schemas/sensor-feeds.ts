@@ -53,3 +53,23 @@ export const IotTelemetryEvent = z.object({
   kafka_ts: z.string().datetime(),
 });
 export type IotTelemetryEvent = z.infer<typeof IotTelemetryEvent>;
+
+/**
+ * The specific shape `mavlink-bridge` writes into `IotTelemetryEvent.payload`
+ * for a MAVLink-sourced device (a drone/UGV flight controller, real or
+ * SITL). `IotTelemetryEvent.payload` itself stays deliberately generic
+ * (unknown IoT device shapes vary), but fusion-svc needs *some* known
+ * contract to fuse a MAVLink telemetry stream into a tracked Entity — this
+ * is that contract. A payload that doesn't match this shape (any other IoT
+ * device) is simply skipped by fusion-svc's iot mapper, not rejected.
+ */
+export const MavlinkTelemetryPayload = z.object({
+  device_class: z.literal("mavlink"),
+  system_id: z.number().int().min(0).max(255),
+  lat: z.number().min(-90).max(90),
+  lon: z.number().min(-180).max(180),
+  alt_m: z.number(),
+  heading_deg: z.number().min(0).max(360).nullable(),
+  groundspeed_mps: z.number().nonnegative().nullable(),
+});
+export type MavlinkTelemetryPayload = z.infer<typeof MavlinkTelemetryPayload>;
