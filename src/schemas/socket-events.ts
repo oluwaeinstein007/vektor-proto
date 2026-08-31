@@ -31,6 +31,25 @@ export const CoaReadyEvent = z.object({
 });
 export type CoaReadyEvent = z.infer<typeof CoaReadyEvent>;
 
+/**
+ * A throttled sample of `{env}.vektor.video.frame` (RTSP/phone-camera
+ * frames — see video-frame.ts) for a live dashboard thumbnail, not the raw
+ * ~15-30fps Kafka stream. Base64-inlined deliberately, unlike the Kafka
+ * topic's raw-bytes-as-value convention: that convention exists because
+ * base64-wrapping a full-framerate stream in JSON is pure overhead, but a
+ * throttled (~1-2fps) sample over Socket.io/JSON is a different performance
+ * regime where inlining is simpler and cheap enough.
+ */
+export const VideoFrameSocketEvent = z.object({
+  sensor_id: z.string(),
+  jpeg_base64: z.string(),
+  frame_number: z.number().int().nonnegative(),
+  width: z.number().int().positive(),
+  height: z.number().int().positive(),
+  captured_at: z.string().datetime(),
+});
+export type VideoFrameSocketEvent = z.infer<typeof VideoFrameSocketEvent>;
+
 /** Server → client event name -> payload schema map. */
 export const ServerToClientEvents = {
   "entity:updated": EntityUpdatedEvent,
@@ -39,6 +58,7 @@ export const ServerToClientEvents = {
   "alert:fired": Alert,
   "coa:ready": CoaReadyEvent,
   "sensor:status": SensorHealth,
+  "video:frame": VideoFrameSocketEvent,
 } as const;
 
 /** Client → server event name -> payload schema map. */
