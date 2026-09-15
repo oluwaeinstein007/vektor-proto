@@ -41,5 +41,12 @@ export const SensorHealth = z.object({
   latency_ms: z.number().nonnegative(),
   drop_rate: z.number().min(0).max(1),
   last_heartbeat: z.string().datetime(),
+  // Populated only for a sensor registered via POST /api/v1/sensors
+  // (see sensor-registry.ts) — most sensors never register, so these stay
+  // null rather than defaulting to a fake position. This is what backs the
+  // "Sensor Coverage" map layer, previously a permanent no-op since nothing
+  // ever supplied a sensor's own installed position.
+  position: z.object({ lat: z.number().min(-90).max(90), lon: z.number().min(-180).max(180) }).nullable(),
+  coverage_radius_m: z.number().positive().nullable(),
 });
 export type SensorHealth = z.infer<typeof SensorHealth>;
