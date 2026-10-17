@@ -19,6 +19,7 @@ export * from "./schemas/geofence.js";
 export * from "./schemas/logistics.js";
 export * from "./schemas/reporting.js";
 export * from "./schemas/sensor-registry.js";
+export * from "./schemas/entity-history.js";
 
 // gRPC stubs (LLMServiceClient etc.) are NOT re-exported here — they pull in
 // @grpc/grpc-js, which requires Node built-ins (fs) unavailable in a browser
